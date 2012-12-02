@@ -5,6 +5,8 @@
     <columns>
       <!-- column-name collectionName -->
       <column type="gchararray"/>
+      <!-- column-name stockIcon -->
+      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkListStore" id="liststore1">
@@ -50,6 +52,7 @@
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="always_show_image">True</property>
                       </object>
@@ -180,6 +183,16 @@
                     <property name="model">collections_view_store</property>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection" id="treeview-selection2"/>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="icon">
+                        <child>
+                          <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
+                          <attributes>
+                            <attribute name="stock-id">1</attribute>
+                          </attributes>
+                        </child>
+                      </object>
                     </child>
                     <child>
                       <object class="GtkTreeViewColumn" id="treeviewcolumn1">

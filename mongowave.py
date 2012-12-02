@@ -79,7 +79,10 @@ class MainWindow:
         if self.db is not None:
             collnames = self.db.collection_names()
             for collection in collnames:
-                self.collections_view_store.append([collection])
+                icon = "gtk-dnd-multiple"
+                if collection.startswith("system."):
+                    icon = "gtk-preferences"
+                self.collections_view_store.append([collection,icon])
 
     def activate_db_buttons(self,active):
         self.add_collection.set_sensitive(active)
