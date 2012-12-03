@@ -109,6 +109,9 @@ class MainWindow:
         else:
             self.set_db(None,None)
 
-if __name__ == '__main__':
+def run():
     window = MainWindow()
     Gtk.main()
+
+if __name__ == '__main__':
+    run()
