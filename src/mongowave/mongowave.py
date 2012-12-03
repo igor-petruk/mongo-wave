@@ -2,11 +2,24 @@
 
 from gi.repository import Gtk, Gio, Gdk
 from pymongo import MongoClient
+import os, sys
+
+def determine_path ():
+    """Borrowed from wxglade.py"""
+    try:
+        root = __file__
+        if os.path.islink (root):
+            root = os.path.realpath (root)
+        return os.path.dirname (os.path.abspath (root))
+    except:
+        print("I'm sorry, but something is wrong.")
+        print("There is no __file__ variable. Please contact the author.")
+        sys.exit ()
 
 class ConnectDialog:
     def __init__(self):
         self.builder = Gtk.Builder()
-        self.uifile = 'connect.glade'
+        self.uifile = determine_path()+'/data/connect.glade'
         self.builder.add_from_file(self.uifile)
         self.connect_dialog = self.builder.get_object('connect_dialog')
         self.dbcombobox = self.builder.get_object('dbcombobox')
@@ -48,7 +61,7 @@ class ConnectDialog:
 class MainWindow:
     def __init__(self):
         self.builder = Gtk.Builder()
-        self.uifile = 'main.glade'
+        self.uifile = determine_path()+'/data/main.glade'
         self.builder.add_from_file(self.uifile)
         self.window = self.builder.get_object('main_window')
         self.window.connect("delete-event", Gtk.main_quit)
