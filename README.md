@@ -1,14 +1,18 @@
-mongo-wave
+MongoDB viewer
 ==========
 
-MongoDB viewer
+This is a simple Python+Gtk mongodb viewer that allows basic management of MongoDB collections
 
 Gentoo Installation
 ==========
 
-Gentoo overlay is hosted here -> https://github.com/igor-petruk/custom-overlay
+[Add my overlay](https://github.com/igor-petruk/custom-overlay)
 
-Add =dev-db/mongowave-9999 ** to package.keywords
+Unmask the package by adding the following line to package.keywords 
 
-emerge -av mongowave
+`=dev-db/mongowave-9999 **`
+
+Emerge mongowave
+
+`emerge -av mongowave`
 
