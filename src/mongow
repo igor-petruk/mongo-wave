@@ -1,5 +1,5 @@
 #!/usr/bin/python
 
-import mongowave.mongowave
+import mongowave.main
 
-mongowave.mongowave.run()
+mongowave.main.run()

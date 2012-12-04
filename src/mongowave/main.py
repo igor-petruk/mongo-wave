@@ -1,62 +1,9 @@
-#!/usr/bin/python
-
 from gi.repository import Gtk, Gio, Gdk
 from pymongo import MongoClient
-import os, sys
 
-def determine_path ():
-    """Borrowed from wxglade.py"""
-    try:
-        root = __file__
-        if os.path.islink (root):
-            root = os.path.realpath (root)
-        return os.path.dirname (os.path.abspath (root))
-    except:
-        print("I'm sorry, but something is wrong.")
-        print("There is no __file__ variable. Please contact the author.")
-        sys.exit ()
-
-class ConnectDialog:
-    def __init__(self):
-        self.builder = Gtk.Builder()
-        self.uifile = determine_path()+'/data/connect.glade'
-        self.builder.add_from_file(self.uifile)
-        self.connect_dialog = self.builder.get_object('connect_dialog')
-        self.dbcombobox = self.builder.get_object('dbcombobox')
-        self.dbcombobox_store = self.builder.get_object('dbcombobox-store')
-        self.hostname_entry = self.builder.get_object('hostname')
-        self.port_entry = self.builder.get_object('port')
-        self.refreshdb = self.builder.get_object('refreshdb')
-        self.refreshdb.connect("clicked",self.on_refresh)
-
-    def host(self):
-        return self.hostname_entry.get_text()
-
-    def port(self):
-        return int(self.port_entry.get_text())
-
-    def on_refresh(self,widget):
-        connection = MongoClient(self.host(),self.port())
-        self.dbcombobox_store.clear()
-        dbnames = connection.database_names()
-        for db in dbnames:
-            self.dbcombobox_store.append([db])
-        if len(dbnames)!=0:
-            self.dbcombobox.set_active(0)
-        connection.close()
-
-    def database(self):
-        tree_iter = self.dbcombobox.get_active_iter()
-        if tree_iter != None:
-            model = self.dbcombobox.get_model()
-            return model[tree_iter][0]
-        else:
-            None
-
-    def run(self):
-        result = self.connect_dialog.run()
-        self.connect_dialog.hide()
-        return result
+from mongowave.utils import *
+from mongowave.connect_dialog import *
+from mongowave.input_dialog import InputDialog
 
 class MainWindow:
     def __init__(self):
@@ -67,6 +14,7 @@ class MainWindow:
         self.window.connect("delete-event", Gtk.main_quit)
         self.db = None
         self.connection = None
+        self.selected_collection = None
 
         self.connect_menu_item = self.builder.get_object('connect_menu_item')
         self.connect_menu_item.connect("activate", self.on_connect_menu_item_click)
@@ -75,14 +23,40 @@ class MainWindow:
         self.disconnect_menu_item.connect("activate", self.on_disconnect_menu_item_click)
 
         self.add_collection = self.builder.get_object('add_collection')
+        self.add_collection.connect("clicked",self.on_add_collections_view)
+
         self.remove_collection = self.builder.get_object('remove_collection')
+        self.remove_collection.connect("clicked",self.on_remove_collections_view)
+
         self.refresh_collections = self.builder.get_object('refresh_collections')
         self.refresh_collections.connect("clicked",self.on_refresh_collections_view)
 
         self.collections_view_store = self.builder.get_object('collections_view_store')
+        self.collections_view = self.builder.get_object('collections_view')
+        cv_selection = self.collections_view.get_selection()
+        cv_selection.connect("changed",self.on_collections_view_selection_changed)
         self.connect_dialog = ConnectDialog()
 
         self.window.show_all()
+
+    def on_collections_view_selection_changed(self,selection):
+        model, treeiter = selection.get_selected()
+        self.remove_collection.set_sensitive(treeiter is not None)
+        if treeiter is not None:
+            self.selected_collection = model[treeiter][0]
+        else:
+            self.selected_collection = None
+
+    def on_add_collections_view(self,widget):
+        collection = InputDialog("New collection","Please, enter new collection name","new_collection").run()
+        if collection is not None:
+            self.db.create_collection(collection)
+            self.refresh_collections_view()
+        self
+
+    def on_remove_collections_view(self,widget):
+        self.db[self.selected_collection].drop()
+        self.refresh_collections_view()
 
     def on_refresh_collections_view(self,widget):
         self.refresh_collections_view()
@@ -99,7 +73,7 @@ class MainWindow:
 
     def activate_db_buttons(self,active):
         self.add_collection.set_sensitive(active)
-        self.remove_collection.set_sensitive(active)
+        self.remove_collection.set_sensitive(active and (self.selected_collection is not None))
         self.refresh_collections.set_sensitive(active)
         self.disconnect_menu_item.set_sensitive(active)
 
