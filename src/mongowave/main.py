@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from mongowave.utils import *
 from mongowave.connect_dialog import *
 from mongowave.input_dialog import InputDialog
+from mongowave.collection_tab import CollectionTab
 
 class MainWindow:
     def __init__(self):
@@ -15,6 +16,7 @@ class MainWindow:
         self.db = None
         self.connection = None
         self.selected_collection = None
+        self.collection_tabs = {}
 
         self.connect_menu_item = self.builder.get_object('connect_menu_item')
         self.connect_menu_item.connect("activate", self.on_connect_menu_item_click)
@@ -33,11 +35,58 @@ class MainWindow:
 
         self.collections_view_store = self.builder.get_object('collections_view_store')
         self.collections_view = self.builder.get_object('collections_view')
+        self.collections_view.connect("row_activated",self.on_collections_row_activated)
         cv_selection = self.collections_view.get_selection()
         cv_selection.connect("changed",self.on_collections_view_selection_changed)
         self.connect_dialog = ConnectDialog()
 
+        self.collections_notebook = self.builder.get_object('collections_notebook')
+
         self.window.show_all()
+
+    def on_collections_row_activated(self,widget,path,column):
+        selected_collection = self.collections_view_store[path][0]
+        if selected_collection not in self.collection_tabs:
+            collection_tab = CollectionTab(selected_collection)
+            page = collection_tab.tab_control()
+
+            label_box = Gtk.Box(spacing=3)
+            label_box.set_orientation(Gtk.Orientation.HORIZONTAL)
+
+            label = Gtk.Label()
+            label.set_text(selected_collection)
+            label_box.pack_start(label,True,True,0)
+
+            close_image = Gtk.Image()
+            close_image.set_from_stock(Gtk.STOCK_CLOSE,Gtk.IconSize.SMALL_TOOLBAR)
+            close_button = Gtk.Button()
+            close_button.set_image(close_image)
+            close_button.set_relief(Gtk.ReliefStyle.NONE)
+            close_button.connect("clicked",self.on_collections_tab_close_button_click, selected_collection)
+            label_box.pack_start(close_button,True,True,0)
+
+            label_box.show_all()
+
+            page_index = self.collections_notebook.append_page(page,label_box)
+            page.show_all()
+            self.collections_notebook.set_current_page(page_index)
+            self.collection_tabs[selected_collection] = page_index
+        else:
+            self.collections_notebook.set_current_page(self.collection_tabs[selected_collection])
+
+    def on_collections_tab_close_button_click(self,widget,tab_name):
+        self.remove_tab_named(tab_name)
+
+    def remove_tab_named(self, name):
+        if name in self.collection_tabs:
+            index_to_remove = self.collection_tabs[name]
+            self.collections_notebook.remove_page(index_to_remove)
+            for tab in self.collection_tabs:
+                index = self.collection_tabs[tab]
+                if index>index_to_remove:
+                    self.collection_tabs[tab] = index-1
+            del self.collection_tabs[name]
+        self.refresh_collections_view()
 
     def on_collections_view_selection_changed(self,selection):
         model, treeiter = selection.get_selected()
@@ -56,7 +105,7 @@ class MainWindow:
 
     def on_remove_collections_view(self,widget):
         self.db[self.selected_collection].drop()
-        self.refresh_collections_view()
+        self.remove_tab_named(self.selected_collection)
 
     def on_refresh_collections_view(self,widget):
         self.refresh_collections_view()
@@ -99,6 +148,3 @@ class MainWindow:
 def run():
     window = MainWindow()
     Gtk.main()
-
-if __name__ == '__main__':
-    run()
