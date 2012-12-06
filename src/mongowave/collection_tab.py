@@ -1,4 +1,4 @@
-from gi.repository import Gtk, Gio, Gdk, GtkSource
+from gi.repository import Gtk, Gdk, GtkSource
 from mongowave.utils import *
 from pymongo import MongoClient
 
