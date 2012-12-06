@@ -47,7 +47,7 @@ class MainWindow:
     def on_collections_row_activated(self,widget,path,column):
         selected_collection = self.collections_view_store[path][0]
         if selected_collection not in self.collection_tabs:
-            collection_tab = CollectionTab(selected_collection)
+            collection_tab = CollectionTab(self.db[selected_collection])
             page = collection_tab.tab_control()
 
             label_box = Gtk.Box(spacing=3)
