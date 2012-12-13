@@ -69,6 +69,7 @@ class CollectionTab:
             for item in object:
                 representation = ""
                 if not isinstance(object[item],dict):
+                    print(item+": "+str(type(object[item])))
                     representation = str(object[item])
                 new_iter = store.append(iter, [item,representation,None])
                 self.populate_iter(store, new_iter, object[item])

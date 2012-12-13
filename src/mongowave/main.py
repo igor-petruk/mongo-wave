@@ -5,14 +5,16 @@ from mongowave.utils import *
 from mongowave.connect_dialog import *
 from mongowave.input_dialog import InputDialog
 from mongowave.collection_tab import CollectionTab
+from mongowave.configuration import ConfigurationManager
 
 class MainWindow:
     def __init__(self):
+        self.config = ConfigurationManager()
         self.builder = Gtk.Builder()
         self.uifile = determine_path()+'/data/main.glade'
         self.builder.add_from_file(self.uifile)
         self.window = self.builder.get_object('main_window')
-        self.window.connect("delete-event", Gtk.main_quit)
+        self.window.connect("delete-event", self.on_quit)
         self.db = None
         self.connection = None
         self.selected_collection = None
@@ -38,11 +40,15 @@ class MainWindow:
         self.collections_view.connect("row_activated",self.on_collections_row_activated)
         cv_selection = self.collections_view.get_selection()
         cv_selection.connect("changed",self.on_collections_view_selection_changed)
-        self.connect_dialog = ConnectDialog()
+        self.connect_dialog = ConnectDialog(self.config)
 
         self.collections_notebook = self.builder.get_object('collections_notebook')
 
         self.window.show_all()
+
+    def on_quit(self,w,e):
+        self.config.save()
+        Gtk.main_quit(w,e)
 
     def on_collections_row_activated(self,widget,path,column):
         selected_collection = self.collections_view_store[path][0]
